@@ -32,6 +32,10 @@ class Scheduler:
         lastTime = self.processes[0].arrivalTime
         while len(queue) > 0:
             process = queue.pop()
+            if process.arrivalTime > lastTime:
+                self.x += [lastTime, process.arrivalTime]
+                self.y += [0, 0]
+                lastTime = process.arrivalTime
             print("Process " + str(process.num) + " begins at : " + str(lastTime))
             process.waitingTime += lastTime - process.arrivalTime  # waiting = start - arrival
             process.status = 0
@@ -60,9 +64,9 @@ class Scheduler:
         while len(queue) > 0:
             process = queue.pop()
             if process.arrivalTime > lastTime:
-                self.x += [lastTime, lastTime + 1]
+                self.x += [lastTime, process.arrivalTime]
                 self.y += [0, 0]
-                lastTime += 1
+                lastTime = process.arrivalTime
             print("Process " + str(process.num) + " begins at : " + str(lastTime))
             execTime = min(self.rrQuantum, process.remaining)
             process.remaining -= execTime
@@ -107,6 +111,8 @@ class Scheduler:
         ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1))
         ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(f))
         plt.show()
+        print(self.x)
+        print(self.y)
 
 
 def main():
