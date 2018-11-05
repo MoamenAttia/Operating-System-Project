@@ -9,6 +9,18 @@ class Scheduler:
         self.rrQuantum = rrQuantum
         self.finishList = []
 
+    def schedule(self, TYPE):
+        if TYPE == "HPF":
+            self.HPF()
+        elif TYPE == "FCFS":
+            self.FCFS()
+        elif TYPE == "RR":
+            self.RR()
+        elif TYPE == "SRTN":
+            self.SRTN()
+        else:
+            return
+
     def FCFS(self):
         self.processes.sort(key=lambda x: (x.arrivalTime, x.num))  # Sort by a Custom Property
         lastTime = self.processes[0].arrivalTime
@@ -25,8 +37,7 @@ class Scheduler:
     def HPF(self):
         pass
 
-    def RR(self, quantum):
-        self.rrQuantum = quantum
+    def RR(self):
         self.processes.sort(key=lambda x: (x.arrivalTime, x.num))  # Sort by a Custom Property
         self.finishList = []
         queue = self.processes.copy()
