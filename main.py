@@ -1,5 +1,7 @@
 from tkinter import *
 from pathlib import Path
+import numpy as np
+from Scheduler import Scheduler
 
 
 class EntryWithPlaceholder(Entry):
@@ -30,29 +32,65 @@ class EntryWithPlaceholder(Entry):
 
 
 mainWindow = Tk()
+mainWindow.title("Operating System Project")
+mainWindow.geometry('300x120')
 Choice = StringVar(mainWindow)
 
-rrQuantumEntry = EntryWithPlaceholder(mainWindow, placeholder="Quantum Value", color="grey")
+rrQuantumEntry = EntryWithPlaceholder(
+    mainWindow, placeholder="Quantum Value", color="grey")
 rrQuantumEntry.grid(row=2, column=1, sticky='w')
 
-switchTimeEntry = EntryWithPlaceholder(mainWindow, placeholder="switch overhead")
+switchTimeEntry = EntryWithPlaceholder(
+    mainWindow, placeholder="switch overhead")
 switchTimeEntry.grid(row=4, column=1, sticky='w')
 
 inputFileEntry = EntryWithPlaceholder(mainWindow, placeholder="input file")
 inputFileEntry.grid(row=3, column=1, sticky='w')
+
+# Column Configuration
+mainWindow.columnconfigure(0, weight=1)
+mainWindow.columnconfigure(1, weight=2)
 
 
 def change_dropdown(*args):
     print(Choice.get())
     global rrQuantumEntry
     if Choice.get() == 'RR':
-        rrQuantumEntry = EntryWithPlaceholder(mainWindow, placeholder="Quantum Value", color="grey")
+        rrQuantumEntry = EntryWithPlaceholder(
+            mainWindow, placeholder="Quantum Value", color="grey")
         rrQuantumEntry.grid(row=2, column=1, sticky='w')
         rrQuantumEntry.configure(state=NORMAL)
     else:
-        rrQuantumEntry = EntryWithPlaceholder(mainWindow, placeholder="Disabled", color="grey")
+        rrQuantumEntry = EntryWithPlaceholder(
+            mainWindow, placeholder="Disabled", color="grey")
         rrQuantumEntry.grid(row=2, column=1, sticky='w')
         rrQuantumEntry.configure(state=DISABLED)
+
+
+def generateProcesses(inputFile):
+    lines = [line.rstrip('\n') for line in open(inputFile)]
+    for i in range(len(lines)):
+        lines[i] = lines[i].split(' ')
+
+    size = int(lines[0][0])
+    mu = float(lines[1][0])
+    sigma = float(lines[1][1])
+    arrivalTime = np.random.normal(mu, sigma, size)
+
+    mu = float(lines[2][0])
+    sigma = float(lines[2][1])
+    burstTime = np.random.normal(mu, sigma, size)
+
+    lam = float(lines[3][0])
+    priority = np.random.poisson(lam, size)
+
+    with open("output.txt", "w") as file:
+        file.write(str(size))
+        for i in range(size):
+            line = str(i + 1) + ' ' + str(abs(arrivalTime[i])) + ' ' + str(abs(burstTime[i])) + ' ' + str(
+                abs(priority[i])) + '\n'
+            i += 1
+            file.write(line)
 
 
 def getFileName():
@@ -60,10 +98,9 @@ def getFileName():
     myFileName = inputFileEntry.get()
     myFile = Path(myFileName)
     if myFile.is_file():
-        print("success")
+        generateProcesses(myFile)
     else:
-        inputFileEntry = EntryWithPlaceholder(
-            mainWindow, placeholder="input file")
+        inputFileEntry = EntryWithPlaceholder(mainWindow, placeholder="input file")
         inputFileEntry.grid(row=3, column=1, sticky='w')
         print("failed")
 
@@ -89,14 +126,7 @@ choices = {'HPF', 'FCFS', 'RR', 'SRTN'}
 popupMenu = OptionMenu(mainWindow, Choice, *choices)
 
 scheduleButton = Button(mainWindow, text="Schedule", command=schedule)
-scheduleButton.grid(row=5, sticky=W+E, columnspan=2)
-
-mainWindow.title("Operating System Project")
-mainWindow.geometry('300x120')
-
-# Column Configuration
-mainWindow.columnconfigure(0, weight=1)
-mainWindow.columnconfigure(1, weight=2)
+scheduleButton.grid(row=5, sticky=W + E, columnspan=2)
 
 # Creating The Drop down Menu
 Choice.set('RR')
