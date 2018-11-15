@@ -1,7 +1,7 @@
-from Process import *
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker
+
+from Process import *
 
 
 class Scheduler:
@@ -9,7 +9,9 @@ class Scheduler:
         self.processes = processes
         self.switchTime = switchTime
         self.rrQuantum = rrQuantum
+        self.numProcesses = len(self.processes)
         self.finishList = []
+        self.visited = []
         self.x = []
         self.y = []
 
@@ -55,13 +57,36 @@ class Scheduler:
     def HPF(self):
         pass
 
+    def __fillQueue(self, queue, lastTime):
+        # assumptions
+        # 1 - if one process finishes its quantum and (one process or more y3ny) came at the end of execution .. i choose new first
+        # 2 - if one process during its exection .. new processes came .. they will be appended to queue ..
+        # then append the current executing
+        temp = []
+        for i in range(self.numProcesses):
+            if not (self.visited[i]) and self.processes[i].arrivalTime <= lastTime:
+                self.visited[i] = True
+                temp.insert(0, self.processes[i])
+
+        for x in temp:
+            queue.insert(1, x)
+
+        if len(queue) == 0:
+            for i in range(self.numProcesses):
+                if not (self.visited[i]):
+                    self.visited[i] = True
+                    queue.append(self.processes[i])
+                    break
+
     def RR(self):
         self.processes.sort(key=lambda x: (x.arrivalTime, x.num))  # Sort by a Custom Property
+        self.visited = [False] * self.numProcesses
         self.finishList = []
-        queue = self.processes.copy()
-        queue.reverse()
+        queue = []
         lastTime = self.processes[0].arrivalTime
-        while len(queue) > 0:
+        self.processes.reverse()
+        while len(self.finishList) < self.numProcesses:
+            self.__fillQueue(queue, lastTime)
             process = queue.pop()
             if process.arrivalTime > lastTime:
                 self.x += [lastTime, process.arrivalTime]
@@ -85,8 +110,9 @@ class Scheduler:
             print("Process " + str(process.num) + " stops at : " + str(lastTime))
             curr = lastTime
             lastTime += self.switchTime
-            self.x += [curr, lastTime]
-            self.y += [0, 0]
+            if self.switchTime != 0:
+                self.x += [curr, lastTime]
+                self.y += [0, 0]
 
     def SRTN(self):
         pass
@@ -106,10 +132,10 @@ class Scheduler:
         plt.ylabel('process id')
         plt.title('Scheduling')
         plt.plot(self.x, self.y, 'b')
-        ax = plt.gca()
-        f = lambda x, pos: str(x).rstrip('0').rstrip('.')
-        ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1))
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(f))
+        # ax = plt.gca()
+        # f = lambda x, pos: str(x).rstrip('0').rstrip('.')
+        # ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1))
+        # ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(f))
         plt.show()
         print(self.x)
         print(self.y)
@@ -118,11 +144,13 @@ class Scheduler:
 def main():
     scheduler = Scheduler(
         [
-            Process(1, 0, 10, 8),
-            Process(2, 2, 3, 8),
-            Process(3, 3, 2, 8),
-            Process(4, 5, 1, 8),
-        ], 1, 2)
+            Process(1, 5, 5, 8),
+            Process(2, 4, 6, 8),
+            Process(3, 3, 7, 8),
+            Process(4, 1, 9, 8),
+            Process(5, 2, 2, 8),
+            Process(6, 6, 3, 8),
+        ], 0, 3)
     scheduler.RR()
     scheduler.printInfo()
     scheduler.drawGraph()
