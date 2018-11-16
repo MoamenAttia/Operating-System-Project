@@ -62,14 +62,14 @@ class Scheduler:
         # 1 - if one process finishes its quantum and (one process or more y3ny) came at the end of execution .. i choose new first
         # 2 - if one process during its exection .. new processes came .. they will be appended to queue ..
         # then append the current executing
-        temp = []
+        cnt = 1
         for i in range(self.numProcesses):
             if not (self.visited[i]) and self.processes[i].arrivalTime <= lastTime:
                 self.visited[i] = True
-                temp.insert(0, self.processes[i])
-
-        for x in temp:
-            queue.insert(1, x)
+                queue.insert(cnt, self.processes[i])
+                cnt += 1
+        if queue[0].remaining == 0:
+            queue.remove(queue[0])
 
         if len(queue) == 0:
             for i in range(self.numProcesses):
@@ -105,8 +105,8 @@ class Scheduler:
                 process.tat = process.last - process.arrivalTime
                 process.weightedTAT = process.tat / process.burstTime
                 self.finishList.append(process)
-            else:
-                queue.insert(0, process)
+            # if remaining = 0 .. push and handle it in __fillQueue
+            queue.insert(0, process)
             print("Process " + str(process.num) + " stops at : " + str(lastTime))
             curr = lastTime
             lastTime += self.switchTime
@@ -132,10 +132,10 @@ class Scheduler:
         plt.ylabel('process id')
         plt.title('Scheduling')
         plt.plot(self.x, self.y, 'b')
-        # ax = plt.gca()
-        # f = lambda x, pos: str(x).rstrip('0').rstrip('.')
-        # ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1))
-        # ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(f))
+        ax = plt.gca()
+        f = lambda x, pos: str(x).rstrip('0').rstrip('.')
+        ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1))
+        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(f))
         plt.show()
         print(self.x)
         print(self.y)
@@ -144,13 +144,14 @@ class Scheduler:
 def main():
     scheduler = Scheduler(
         [
-            Process(1, 5, 5, 8),
-            Process(2, 4, 6, 8),
-            Process(3, 3, 7, 8),
-            Process(4, 1, 9, 8),
-            Process(5, 2, 2, 8),
-            Process(6, 6, 3, 8),
-        ], 0, 3)
+            Process(1, 0, 3, 1),
+            Process(2, 1, 5, 1),
+            Process(3, 2, 2, 1),
+            Process(4, 3, 5, 1),
+            Process(5, 4, 5, 1),
+        ], 0, 2)
+
+
     scheduler.RR()
     scheduler.printInfo()
     scheduler.drawGraph()
