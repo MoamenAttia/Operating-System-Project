@@ -54,13 +54,33 @@ class Scheduler:
             self.x += [curr, lastTime]
             self.y += [0, 0]
 
-    def HPF(self):
-        pass
+    def HPF(self): ##not tested or even compiled yet
+            self.processes.sort(key=lambda x: (x.arrivalTime, x.num))  # Sort by a Custom Property
+            lastTime = self.processes[0].arrivalTime
+            queue = self.processes.copy() # this queue holds all processes. After the execution of a process it is deleted from this queue.
+            while len(queue)>0:
+                hp = [process for process in queue if process.arrivalTime<=lastTime] #this list will hold the arrived processes, priority sorted
+                if len(hp)==0:
+                    lastTime=queue[0].arrivalTime
+                    self.x+=[lastTime, queue[0].arrivalTime]
+                    self.y+=[0,0]
+                    continue
+                hp.sort(key=lambda x: (x.priority, x.num))  # Sort processes by priority
+                lastTime+=hp[0].burstTime
+                self.finishList+=[hp[0]] # should i use another [] ??
+                # here we should assign the tat to the process. ask mo2men
+                tat=lastTime-hp[0].arrivalTime
+                weightedTAT=tat/hp[0].burstTime
+                print("Process " + str(hp[0].num) + " ends at : " + str(lastTime))
+                self.x+=[lastTime-hp[0].burstTime,lastTime]
+                self.y+=[hp[0].num,hp[0].num]
+                queue.remove(hp[0])
+                hp.remove(hp[0])
 
     def __fillQueue(self, queue, lastTime):
         # assumptions
         # 1 - if one process finishes its quantum and (one process or more y3ny) came at the end of execution .. i choose new first
-        # 2 - if one process during its exection .. new processes came .. they will be appended to queue ..
+        # 2 - if one process during its execution .. new processes came .. they will be appended to queue ..
         # then append the current executing
         cnt = 1
         for i in range(self.numProcesses):
@@ -115,8 +135,42 @@ class Scheduler:
                 self.y += [0, 0]
 
     def SRTN(self):
-        pass
+        self.processes.sort(key=lambda x: (x.arrivalTime, x.num))  # Sort by a Custom Property
+        lastTime = self.processes[0].arrivalTime
+        queue = self.processes.copy() # this queue holds all processes. After the execution of a process it is deleted from this queue.
+        infinityRemainingProcess= Process(-1,10000000,0,0)
+        queue.append(infinityRemainingProcess)
+        while len(queue)>0 or len(arrived)>0:
+            arrived = [process for process in queue if process.arrivalTime<=lastTime]
+            if len(arrived)==0:
+                self.x+=[lastTime,lastTime+queue[0].arrivalTime]
+                self.y+=[0,0]
+                lastTime=queue[0].arrivalTime
+                continue
 
+            queue=[process for process in queue if process.arrivalTime>lastTime]
+            #no need to initialize the remaining time it's already initialized in the constructor
+            arrived.sort(key=lambda x: (x.remaining, x.num))  # Sort processes by remaining time
+            
+            if arrived[0].remaining<=queue[0].arrivalTime-lastTime :
+                lastTime+=arrived[0].remaining
+                tat=lastTime-arrived[0].arrivalTime #need to assign values
+                weightedTAT=tat/arrived[0].burstTime #need to assign values
+                self.finishList+= [arrived[0]] # another [] ??
+                print("Process " + str(arrived[0].num) + " ends at : " + str(lastTime))
+                self.x+=[lastTime-arrived[0].remaining,lastTime]
+                self.y+=[arrived[0].num,arrived[0].num]
+                arrived.remove(arrived[0])
+                #continue
+            else:
+                arrived[0].remaining-=queue[0].arrivalTime-lastTime
+                lastTime=queue[0].arrivalTime
+                self.x+=[lastTime-queue[0].arrivalTime,lastTime]
+                self.y+=[hp[0].num,arrived[0].num]
+            if len(queue)==1 and len(arrived)==0:
+                return
+
+	
     def printInfo(self):
         TAT = 0
         WTAT = 0
@@ -132,10 +186,10 @@ class Scheduler:
         plt.ylabel('process id')
         plt.title('Scheduling')
         plt.plot(self.x, self.y, 'b')
-        ax = plt.gca()
-        f = lambda x, pos: str(x).rstrip('0').rstrip('.')
-        ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1))
-        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(f))
+        #ax = plt.gca()
+        #f = lambda x, pos: str(x).rstrip('0').rstrip('.')
+        #ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1))
+        #ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(f))
         plt.show()
         print(self.x)
         print(self.y)
