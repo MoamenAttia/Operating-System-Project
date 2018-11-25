@@ -1,6 +1,6 @@
 import numpy as np
 from Process import *
-
+import matplotlib.pyplot as plt
 
 class Scheduler:
     def __init__(self, processes, switchTime=0, rrQuantum=0):
@@ -63,7 +63,7 @@ class Scheduler:
                     self.x+=[lastTime, queue[0].arrivalTime]
                     self.y+=[0,0]
                     continue
-                hp.sort(key=lambda x: (x.priority, x.num))  # Sort processes by priority
+                hp.sort(key=lambda x: (-x.priority, x.num))  # Sort processes by priority
                 lastTime+=hp[0].burstTime
                 self.finishList+=[hp[0]] # should i use another [] ??
                 # here we should assign the tat to the process. ask mo2men
@@ -161,9 +161,9 @@ class Scheduler:
             #no need to initialize the remaining time it's already initialized in the constructor
             arrived.sort(key=lambda x: (x.remaining, x.num))  # Sort processes by remaining time
             curr=lastTime
-            if arrived[0].remaining<=queue[0].arrivalTime-lastTime :
+            if arrived[0].remaining<=queue[0].arrivalTime-lastTime:
                 lastTime+=arrived[0].remaining
-                tat=lastTime-arrived[0].arrivalTime 
+                tat=lastTime-arrived[0].arrivalTime
                 self.processes[arrived[0].num-1].tat=tat
                 self.processes[arrived[0].num-1].weightedTAT=tat/arrived[0].burstTime
                 self.processes[arrived[0].num-1].waitingTime=tat-arrived[0].burstTime
@@ -180,16 +180,22 @@ class Scheduler:
                 arrived.remove(arrived[0])
                 #continue
             else:
+                switched=0
                 if arrived[0].num !=previousExecutingProcess:
                     lastTime += self.switchTime
                     if self.switchTime != 0:
                         self.x += [lastTime-self.switchTime, lastTime]
                         self.y += [0, 0]
                         print ("process num "+ str(arrived[0].num)+" switched")
+                        switched=1
                     curr=lastTime
                 arrived[0].remaining-=queue[0].arrivalTime-lastTime
                 lastTime=queue[0].arrivalTime
-                self.x+=[curr,lastTime]
+                if switched==1:
+                    self.x+=[curr,lastTime+self.switchTime]
+                    lastTime+=self.switchTime
+                else :
+                    self.x+=[curr,lastTime]
                 self.y+=[arrived[0].num,arrived[0].num]
                 previousExecutingProcess=arrived[0].num
 
@@ -231,12 +237,12 @@ def main():
             Process(4, 3, 1, 5),
             Process(5, 4, 2, 4),
             Process(6, 5, 1, 4),
-        ], 1, 2)
+        ], 0, 2)
 
 
-    scheduler.SRTN()
+    scheduler.HPF()
     scheduler.printInfo()
-    #scheduler.drawGraph()
+    scheduler.drawGraph()
 
 
 if __name__ == '__main__':
