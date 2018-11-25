@@ -1,6 +1,4 @@
-import matplotlib.pyplot as plt
-import matplotlib.ticker
-
+import numpy as np
 from Process import *
 
 
@@ -70,10 +68,15 @@ class Scheduler:
                 self.finishList+=[hp[0]] # should i use another [] ??
                 # here we should assign the tat to the process. ask mo2men
                 tat=lastTime-hp[0].arrivalTime
-                weightedTAT=tat/hp[0].burstTime
+                self.processes[hp[0].num-1].tat=tat
+                self.processes[hp[0].num-1].weightedTAT=tat/hp[0].burstTime
                 print("Process " + str(hp[0].num) + " ends at : " + str(lastTime))
                 self.x+=[lastTime-hp[0].burstTime,lastTime]
                 self.y+=[hp[0].num,hp[0].num]
+                lastTime+=self.switchTime
+                if self.switchTime != 0:
+                    self.x += [lastTime-self.switchTime, lastTime]
+                    self.y += [0, 0]
                 queue.remove(hp[0])
                 hp.remove(hp[0])
 
@@ -140,9 +143,14 @@ class Scheduler:
         queue = self.processes.copy() # this queue holds all processes. After the execution of a process it is deleted from this queue.
         infinityRemainingProcess= Process(-1,10000000,0,0)
         queue.append(infinityRemainingProcess)
+        arrived=[]
+        tat=0
         while len(queue)>0 or len(arrived)>0:
-            arrived = [process for process in queue if process.arrivalTime<=lastTime]
+            arrived += [process for process in queue if process.arrivalTime<=lastTime]
             if len(arrived)==0:
+                if len(queue)==1:
+                    return
+                
                 self.x+=[lastTime,lastTime+queue[0].arrivalTime]
                 self.y+=[0,0]
                 lastTime=queue[0].arrivalTime
@@ -150,23 +158,31 @@ class Scheduler:
 
             queue=[process for process in queue if process.arrivalTime>lastTime]
             #no need to initialize the remaining time it's already initialized in the constructor
+           
             arrived.sort(key=lambda x: (x.remaining, x.num))  # Sort processes by remaining time
-            
+            curr=lastTime
             if arrived[0].remaining<=queue[0].arrivalTime-lastTime :
                 lastTime+=arrived[0].remaining
-                tat=lastTime-arrived[0].arrivalTime #need to assign values
-                weightedTAT=tat/arrived[0].burstTime #need to assign values
+                tat=lastTime-arrived[0].arrivalTime 
+                self.processes[arrived[0].num-1].tat=tat
+                self.processes[arrived[0].num-1].weightedTAT=tat/arrived[0].burstTime
+                self.processes[arrived[0].num-1].waitingTime=tat-arrived[0].burstTime
                 self.finishList+= [arrived[0]] # another [] ??
                 print("Process " + str(arrived[0].num) + " ends at : " + str(lastTime))
-                self.x+=[lastTime-arrived[0].remaining,lastTime]
+                self.x+=[curr,lastTime]
                 self.y+=[arrived[0].num,arrived[0].num]
                 arrived.remove(arrived[0])
+                lastTime += self.switchTime
+                if self.switchTime != 0:
+                    self.x += [lastTime-self.switchTime, lastTime]
+                    self.y += [0, 0]
                 #continue
             else:
                 arrived[0].remaining-=queue[0].arrivalTime-lastTime
                 lastTime=queue[0].arrivalTime
-                self.x+=[lastTime-queue[0].arrivalTime,lastTime]
-                self.y+=[hp[0].num,arrived[0].num]
+                self.x+=[curr,lastTime]
+                self.y+=[arrived[0].num,arrived[0].num]
+                
             if len(queue)==1 and len(arrived)==0:
                 return
 
@@ -199,14 +215,14 @@ def main():
     scheduler = Scheduler(
         [
             Process(1, 0, 3, 1),
-            Process(2, 1, 5, 1),
-            Process(3, 2, 2, 1),
-            Process(4, 3, 5, 1),
-            Process(5, 4, 5, 1),
-        ], 0, 2)
+            Process(2, 1, 5, 2),
+            Process(3, 2, 2, 3),
+            Process(4, 3, 5, 5),
+            Process(5, 4, 5, 4),
+        ], 1, 2)
 
 
-    scheduler.RR()
+    scheduler.SRTN()
     scheduler.printInfo()
     scheduler.drawGraph()
 
