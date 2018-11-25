@@ -2,6 +2,8 @@ from tkinter import *
 import numpy as np
 from Scheduler import Scheduler
 from Process import Process
+from os import path
+import os as os
 
 
 class EntryWithPlaceholder(Entry):
@@ -31,9 +33,12 @@ class EntryWithPlaceholder(Entry):
             self.put_placeholder()
 
 
+last_input_file = 'input file'
 mainWindow = Tk()
-rrQuantumEntry = EntryWithPlaceholder(mainWindow, placeholder="0", color="grey")
-switchTimeEntry = EntryWithPlaceholder(mainWindow, placeholder="switch overhead")
+rrQuantumEntry = EntryWithPlaceholder(
+    mainWindow, placeholder="0", color="grey")
+switchTimeEntry = EntryWithPlaceholder(
+    mainWindow, placeholder="switch overhead")
 inputFileEntry = EntryWithPlaceholder(mainWindow, placeholder="input file")
 processesList = []
 Choice = StringVar(mainWindow)
@@ -79,17 +84,31 @@ def generateProcesses(inputFile):
             line = str(i + 1) + ' ' + str(abs(arrivalTime[i])) + ' ' + str(abs(burstTime[i])) + ' ' + str(
                 abs(priority[i])) + '\n'
             file.write(line)
-            processesList.append(Process(i + 1, arrivalTime[i], burstTime[i], priority[i]))
+            processesList.append(
+                Process(i + 1, arrivalTime[i], burstTime[i], priority[i]))
 
 
 def getFileName():
-    global inputFileEntry
+    global inputFileEntry, processesList
     myFileName = inputFileEntry.get()
-    myFile = Path(myFileName)
-    if myFile.is_file():
+    processesList = []
+    if myFileName == last_input_file:
+        with open("output.txt", "r") as file:
+            n = int(file.readline())
+            for i in range(n):
+                line = file.readline().rstrip('\n').split(' ')
+                processesList.append(
+                    Process(int(line[0]), float(line[1]), float(line[2]), float(line[3])))
+        return
+
+    basepath = path.dirname(__file__)
+    myFile = path.abspath(path.join(basepath, myFileName))
+
+    if os.path.exists(myFile):
         generateProcesses(myFile)
     else:
-        inputFileEntry = EntryWithPlaceholder(mainWindow, placeholder="input file")
+        inputFileEntry = EntryWithPlaceholder(
+            mainWindow, placeholder="input file")
         inputFileEntry.grid(row=3, column=1, sticky='w')
         print("failed")
 
@@ -135,11 +154,14 @@ def main():
 
     # Creating The Drop down Menu
     Choice.set('RR')
-    Label(mainWindow, text="Choose a Scheduler").grid(row=0, column=0, sticky='w')
+    Label(mainWindow, text="Choose a Scheduler").grid(
+        row=0, column=0, sticky='w')
     popupMenu.grid(row=0, column=1, sticky='w')
     Label(mainWindow, text="Enter Quantum").grid(row=2, column=0, sticky='w')
-    Label(mainWindow, text="Enter input file").grid(row=3, column=0, sticky='w')
-    Label(mainWindow, text="Enter Switch Time").grid(row=4, column=0, sticky='w')
+    Label(mainWindow, text="Enter input file").grid(
+        row=3, column=0, sticky='w')
+    Label(mainWindow, text="Enter Switch Time").grid(
+        row=4, column=0, sticky='w')
     Choice.trace('w', change_dropdown)
     mainWindow.mainloop()
 
