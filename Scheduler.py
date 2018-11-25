@@ -1,6 +1,7 @@
 import numpy as np
-from Process import *
+#from Process import *
 import matplotlib.pyplot as plt
+from Process import *
 
 class Scheduler:
     def __init__(self, processes, switchTime=0, rrQuantum=0):
@@ -162,6 +163,16 @@ class Scheduler:
             arrived.sort(key=lambda x: (x.remaining, x.num))  # Sort processes by remaining time
             curr=lastTime
             if arrived[0].remaining<=queue[0].arrivalTime-lastTime:
+                switched=0
+                if arrived[0].num !=previousExecutingProcess:
+                    lastTime += self.switchTime
+                    if self.switchTime != 0:
+                        self.x += [lastTime-self.switchTime, lastTime]
+                        self.y += [0, 0]
+                        print ("process num "+ str(arrived[0].num)+" switched")
+                        switched=1
+                    curr=lastTime
+                
                 lastTime+=arrived[0].remaining
                 tat=lastTime-arrived[0].arrivalTime
                 self.processes[arrived[0].num-1].tat=tat
@@ -172,11 +183,11 @@ class Scheduler:
                 self.x+=[curr,lastTime]
                 self.y+=[arrived[0].num,arrived[0].num]
                 previousExecutingProcess=arrived[0].num
-                lastTime += self.switchTime
+                '''lastTime += self.switchTime
                 if self.switchTime != 0:
                     self.x += [lastTime-self.switchTime, lastTime]
                     self.y += [0, 0]
-                    print ("process num "+ str(arrived[0].num)+" switched")
+                    print ("process num "+ str(arrived[0].num)+" switched")'''
                 arrived.remove(arrived[0])
                 #continue
             else:
@@ -237,10 +248,10 @@ def main():
             Process(4, 3, 1, 5),
             Process(5, 4, 2, 4),
             Process(6, 5, 1, 4),
-        ], 0, 2)
+        ], 1, 2)
 
 
-    scheduler.HPF()
+    scheduler.SRTN()
     scheduler.printInfo()
     scheduler.drawGraph()
 
