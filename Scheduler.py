@@ -186,6 +186,7 @@ class Scheduler:
                         self.x += [lastTime-self.switchTime, lastTime]
                         self.y += [0, 0]
                         print ("process num "+ str(arrived[0].num)+" switched")
+                    curr=lastTime
                 arrived[0].remaining-=queue[0].arrivalTime-lastTime
                 lastTime=queue[0].arrivalTime
                 self.x+=[curr,lastTime]
