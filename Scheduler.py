@@ -141,6 +141,7 @@ class Scheduler:
         self.processes.sort(key=lambda x: (x.arrivalTime, x.num))  # Sort by a Custom Property
         lastTime = self.processes[0].arrivalTime
         queue = self.processes.copy() # this queue holds all processes. After the execution of a process it is deleted from this queue.
+        previousExecutingProcess = self.processes[0].num
         infinityRemainingProcess= Process(-1,10000000,0,0)
         queue.append(infinityRemainingProcess)
         arrived=[]
@@ -158,7 +159,6 @@ class Scheduler:
 
             queue=[process for process in queue if process.arrivalTime>lastTime]
             #no need to initialize the remaining time it's already initialized in the constructor
-           
             arrived.sort(key=lambda x: (x.remaining, x.num))  # Sort processes by remaining time
             curr=lastTime
             if arrived[0].remaining<=queue[0].arrivalTime-lastTime :
@@ -171,18 +171,28 @@ class Scheduler:
                 print("Process " + str(arrived[0].num) + " ends at : " + str(lastTime))
                 self.x+=[curr,lastTime]
                 self.y+=[arrived[0].num,arrived[0].num]
-                arrived.remove(arrived[0])
+                previousExecutingProcess=arrived[0].num
                 lastTime += self.switchTime
                 if self.switchTime != 0:
                     self.x += [lastTime-self.switchTime, lastTime]
                     self.y += [0, 0]
+                    print ("process num "+ str(arrived[0].num)+" switched")
+                arrived.remove(arrived[0])
                 #continue
             else:
+                if arrived[0].num !=previousExecutingProcess:
+                    lastTime += self.switchTime
+                    if self.switchTime != 0:
+                        self.x += [lastTime-self.switchTime, lastTime]
+                        self.y += [0, 0]
+                        print ("process num "+ str(arrived[0].num)+" switched")
                 arrived[0].remaining-=queue[0].arrivalTime-lastTime
                 lastTime=queue[0].arrivalTime
                 self.x+=[curr,lastTime]
                 self.y+=[arrived[0].num,arrived[0].num]
-                
+                previousExecutingProcess=arrived[0].num
+
+
             if len(queue)==1 and len(arrived)==0:
                 return
 
@@ -214,17 +224,18 @@ class Scheduler:
 def main():
     scheduler = Scheduler(
         [
-            Process(1, 0, 3, 1),
+            Process(1, 0, 7, 1),
             Process(2, 1, 5, 2),
-            Process(3, 2, 2, 3),
-            Process(4, 3, 5, 5),
-            Process(5, 4, 5, 4),
+            Process(3, 2, 3, 3),
+            Process(4, 3, 1, 5),
+            Process(5, 4, 2, 4),
+            Process(6, 5, 1, 4),
         ], 1, 2)
 
 
     scheduler.SRTN()
     scheduler.printInfo()
-    scheduler.drawGraph()
+    #scheduler.drawGraph()
 
 
 if __name__ == '__main__':
